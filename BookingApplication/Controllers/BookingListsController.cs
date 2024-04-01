@@ -28,9 +28,8 @@ namespace BookingApplication.Controllers
             var user = _context.Users
                 .Include(z => z.BookingList)
                 .Include(z => z.BookingList.BookReservations)
-                .Include("BookingList.BookReservations")
                 .Include("BookingList.BookReservations.Reservation")
-                .Include("BookingList.BookReservations.Reservation.Aparment")
+                .Include("BookingList.BookReservations.Reservation.Apartment")
                 .SingleOrDefault(z => z.Id == userId);
 
             var bookingList = user.BookingList;
