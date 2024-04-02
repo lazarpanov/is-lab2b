@@ -172,5 +172,43 @@ namespace BookingApplication.Controllers
         {
             return _context.BookingLists.Any(e => e.Id == id);
         }
+
+        public async Task<IActionResult> DeleteReservationFromBooking(Guid reservationId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+
+            var user = _context.Users
+                .Include(z => z.BookingList)
+                .Include(z => z.BookingList.BookReservations)
+                .Include("BookingList.BookReservations.Reservation")
+                .SingleOrDefault(z => z.Id == userId);
+
+            var bookingList = user.BookingList;
+
+            var itemToDelete = _context.BookReservations.Where(z => z.ReservationId == reservationId).FirstOrDefault();
+            bookingList.BookReservations.Remove(itemToDelete);
+            _context.Update(bookingList);
+            _context.SaveChanges();
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        public async Task<IActionResult> BookNow()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+
+            var user = _context.Users
+                .Include(z => z.BookingList)
+                .Include(z => z.BookingList.BookReservations)
+                .Include("BookingList.BookReservations.Reservation")
+                .SingleOrDefault(z => z.Id == userId);
+
+            var bookingList = user.BookingList;
+            bookingList.BookReservations.Clear();
+            _context.BookingLists.Update(bookingList);
+            _context.SaveChanges();
+
+            return RedirectToAction(nameof(Index));
+        }
     }
 }

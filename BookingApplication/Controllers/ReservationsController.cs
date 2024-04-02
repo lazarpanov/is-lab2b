@@ -165,5 +165,56 @@ namespace BookingApplication.Controllers
         {
             return _context.Reservations.Any(e => e.Id == id);
         }
+
+        public async Task<IActionResult> AddToBookingList(Guid? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var reservation = _context.Reservations.Find(id);
+            BookReservation br = new BookReservation()
+            {
+                ReservationId = reservation.Id
+            };
+
+            return View(br);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddToBookingListConfirmed(BookReservation model)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+
+            var user = _context.Users
+                .Include(z => z.BookingList)
+                .Include(z => z.BookingList.BookReservations)
+                .Include("BookingList.BookReservations.Reservation")
+                .SingleOrDefault(z => z.Id == userId);
+
+            var bookingList = user.BookingList;
+
+            var reservation = _context.Reservations.Find(model.ReservationId);
+
+            BookReservation br = new BookReservation()
+            {
+                Id = Guid.NewGuid(),
+                BookingList = bookingList,
+                BookingListId = bookingList.Id,
+                Reservation = reservation,
+                ReservationId = reservation.Id,
+                NumberOfNights = model.NumberOfNights
+            };
+
+            _context.BookReservations.Add(br);
+            _context.SaveChanges();
+
+            return RedirectToAction(nameof(Index));
+        }
+
+
     }
+
+
 }
